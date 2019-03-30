@@ -339,7 +339,7 @@ assert(status == noErr);
 
             OSStatus status;
     
-            AudioComponentDescription componentDescription;
+            AudioComponentDescription componentDescription = {};
             componentDescription.componentType = kAudioUnitType_Output;
             switch (inputdeviceid)
             {
