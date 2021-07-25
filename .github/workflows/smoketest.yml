@@ -24,6 +24,9 @@ jobs:
     - name: Refresh Ubuntu-repo
       run: sudo apt update
 
+    - name: Update Ubuntu-dist
+      run: sudo apt -y upgrade
+
     - name: Source environment
       working-directory: ${{runner.workspace}}/TeamTalk5
       run: source env.sh
@@ -64,7 +67,6 @@ jobs:
            qtmultimedia5-dev
            libqt5x11extras5-dev
            
-
     - name: Clone submodules
       working-directory: ${{runner.workspace}}/TeamTalk5
       run: git submodule update --init Library/TeamTalkLib/test/testdata
