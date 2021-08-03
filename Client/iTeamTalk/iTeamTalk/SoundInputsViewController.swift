@@ -89,10 +89,13 @@ class SoundInputsViewController : UITableViewController {
                 if indexPath.section < inputs.count {
                     if let datasources = inputs[indexPath.section].dataSources {
                         if (indexPath.row < datasources.count) {
-                            try session.setInputDataSource(datasources[indexPath.row])
+                            //try session.setInputDataSource(datasources[indexPath.row])
+                            let preferredInput = session.preferredInput
+                            try preferredInput?.setPreferredDataSource(datasources[indexPath.row])
                         }
                         else {
-                            //try session.setPreferredInput(inputs[indexPath.section].)
+                            let builtInMicInput = inputs.first(where: { $0.portType == .builtInMic })
+                            try session.setPreferredInput(builtInMicInput)
                         }
                     }
                 }
