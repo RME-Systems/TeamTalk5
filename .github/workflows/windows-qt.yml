@@ -40,7 +40,7 @@ jobs:
       shell: cmd
       working-directory: ${{runner.workspace}}
       run: |
-        set PATH=${{runner.workspace}}\install\bin;%PATH%
+        echo ${{runner.workspace}}\install\bin >> $GITHUB_PATH
         cd TeamTalk5\Client\qtTeamTalk
         qmake CONFIG+=release teamtalk5.pro
         set CL=/MP
