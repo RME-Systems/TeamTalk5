@@ -18,9 +18,11 @@ jobs:
           - name: VS2019Release32
             vmimage: windows-2019
             cmakeplatform: Win32
+            dotnetarch: x86
           - name: VS2019Release64
             vmimage: windows-2019
             cmakeplatform: x64
+            dotnetarch: x64
     runs-on: ${{ matrix.vmimage }}
     name: ${{ matrix.name }}
     steps:
@@ -45,6 +47,8 @@ jobs:
       working-directory: ${{runner.workspace}}
       run: |
         cmake --build output --parallel 8 --config Release
+        echo ${{runner.workspace}}\TeamTalk5\Library\TeamTalk_DLL >> $GITHUB_PATH
+        echo ${{runner.workspace}}\TeamTalk5\Library\TeamTalkJNI\libs >> $GITHUB_PATH
 
     - name: Copy Server Configuration
       working-directory: ${{runner.workspace}}/TeamTalk5
@@ -61,6 +65,33 @@ jobs:
         tt5svc.exe -i
         tt5svc.exe -s
 
+    - name: Catch unit-test
+      working-directory: ${{runner.workspace}}/TeamTalk5/Library/TeamTalkLib/test
+      shell: cmd
+      run: |
+        dir
+        dir testdata
+        catchtt.exe --durations yes
+
+    - name: Restart TeamTalk Standard Service
+      working-directory: ${{runner.workspace}}/TeamTalk5/Server
+      shell: cmd
+      run: |
+        tt5svc.exe -e
+        tt5svc.exe -s
+
+    - name: Run .NET unit tests non-encrypted
+      working-directory: ${{runner.workspace}}
+      shell: cmd
+      run: |
+        cd output\TeamTalk5\Library\TeamTalk.NET\TeamTalkTest.NET\Release
+        VSTest.Console.exe /Platform:${{ matrix.dotnetarch }} TeamTalk5Test.NET.dll
+
+    - name: Enable encryption
+      shell: cmd
+      run: |
+        echo "ENCRYPTED=1" >> $GITHUB_ENV
+
     - name: Start TeamTalk Professional Service
       working-directory: ${{runner.workspace}}/TeamTalk5/Server
       shell: cmd
@@ -68,7 +99,25 @@ jobs:
         tt5prosvc.exe -i
         tt5prosvc.exe -s
 
-    - name: Catch unit-test
-      working-directory: ${{runner.workspace}}/TeamTalk5/Library/TeamTalkLib/test
+    - name: Run .NET unit tests encrypted
+      working-directory: ${{runner.workspace}}
       shell: cmd
-      run: catchtt.exe --durations yes
+      run: |
+        cd output\TeamTalk5\Library\TeamTalk.NET\TeamTalkTest.NET\Release
+        VSTest.Console.exe /Platform:${{ matrix.dotnetarch }} TeamTalk5ProTest.NET.dll
+
+    - name: Restart TeamTalk Professional Service
+      working-directory: ${{runner.workspace}}/TeamTalk5/Server
+      shell: cmd
+      run: |
+        tt5prosvc.exe -e
+        tt5prosvc.exe -s
+
+    - name: Uninstall TeamTalk Services
+      working-directory: ${{runner.workspace}}/TeamTalk5/Server
+      shell: cmd
+      run: |
+        tt5svc.exe -e
+        tt5svc.exe -u
+        tt5prosvc.exe -e
+        tt5prosvc.exe -u

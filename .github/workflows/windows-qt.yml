@@ -58,7 +58,6 @@ jobs:
       shell: cmd
       working-directory: ${{runner.workspace}}
       run: |
-        echo %PATH%
         cd TeamTalk5\Client\qtTeamTalk
         qmake CONFIG+=release teamtalk5.pro
         set CL=/MP
