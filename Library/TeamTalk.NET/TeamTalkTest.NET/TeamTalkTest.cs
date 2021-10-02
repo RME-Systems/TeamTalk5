@@ -41,10 +41,12 @@ namespace TeamTalkTest.NET
 
         const int DEF_WAIT = 15000;
         const string ADMIN_USERNAME = "admin", ADMIN_PASSWORD = "admin", ADMIN_NICKNAME = "Admin";
-        const string IPADDR = "127.0.0.1";
-        //const string IPADDR = "localhost";
-        const int TCPPORT = 10333, UDPPORT = 10333;
-        const bool ENCRYPTED = false;
+
+        static string IPADDR = "127.0.0.1";
+        static int TCPPORT = 10333, UDPPORT = 10333;
+        static bool ENCRYPTED = false;
+        static int INPUTDEVICEID = -1, OUTPUTDEVICEID = -1;
+        static bool GITHUBSKIP = false;
 
         const string MUXRECORDFILENAME = "c:\\Temp\\testmux.wav";
         const string MEDIAFOLDER = "c:\\temp";
@@ -66,6 +68,26 @@ namespace TeamTalkTest.NET
         [TestInitialize]
         public void SetUp()
         {
+            string defaultindev = Environment.GetEnvironmentVariable("INPUTDEVICEID");
+            string defaultoutdev = Environment.GetEnvironmentVariable("OUTPUTDEVICEID");
+            if (defaultindev != null)
+                INPUTDEVICEID = int.Parse(defaultindev);
+            if (defaultoutdev != null)
+                OUTPUTDEVICEID = int.Parse(defaultoutdev);
+
+            string githubskip = Environment.GetEnvironmentVariable("GITHUBSKIP");
+            if (githubskip != null)
+                GITHUBSKIP = githubskip == "1";
+            
+            string encrypted = Environment.GetEnvironmentVariable("ENCRYPTED");
+            if (encrypted != null)
+                ENCRYPTED = encrypted == "1";
+            if (ENCRYPTED)
+                TCPPORT = UDPPORT = 10443;
+            
+            string serverip = Environment.GetEnvironmentVariable("SERVERIP");
+            if (serverip != null)
+                IPADDR = serverip;
         }
 
         [TestCleanup]
@@ -93,7 +115,6 @@ namespace TeamTalkTest.NET
         [TestMethod]
         public void TestSoundInit()
         {
-            System.GC.Collect();
             TeamTalkBase ttclient = NewClientInstance();
 
             int devin = 0, devout = 0;
@@ -2883,14 +2904,18 @@ namespace TeamTalkTest.NET
 
         private void InitSound(TeamTalkBase ttclient)
         {
-            InitSound(ttclient, -1, -1, false);
+            InitSound(ttclient, INPUTDEVICEID, OUTPUTDEVICEID, false);
         }
 
         private void InitSound(TeamTalkBase ttclient, int devin, int devout, bool duplex)
         {
             int inn = 0, outt = 0;
-            Assert.IsTrue(TeamTalkBase.GetDefaultSoundDevicesEx(SoundSystem.SOUNDSYSTEM_WASAPI,
-                                                 ref inn, ref outt), "Get default DSound devices");
+            if (!GITHUBSKIP)
+            {
+                Assert.IsTrue(TeamTalkBase.GetDefaultSoundDevicesEx(SoundSystem.SOUNDSYSTEM_WASAPI,
+                                                     ref inn, ref outt), "Get default DSound devices");
+            }
+
             if (devin < 0)
                 devin = inn;
             if (devout < 0)
